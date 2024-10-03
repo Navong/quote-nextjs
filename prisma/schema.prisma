@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Quote {
+  id        String   @id @default(cuid())
+  content   String
+  author    String
+  tags      Tag[]    // Add tags for better recommendations
+  likes     Like[]
+  category  String?
+  language  String   @default("en")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tag {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  quotes Quote[]
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  quote     Quote    @relation(fields: [quoteId], references: [id])
+  quoteId   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, quoteId])
+}
