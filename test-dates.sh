@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Starting date for the first commit
-START_DATE="2024-10-03T12:00:00"
+START_DATE="2024-11-03T12:00:00"
 INCREMENT="+10M" # For BSD `date`, use +10M for minutes
 
 # Counter to increment dates
