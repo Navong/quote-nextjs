@@ -1,20 +1,17 @@
-FROM alpine:3.21
-
-# Install Node.js and npm
-RUN apk add --no-cache nodejs npm
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY server/package*.json ./
 
-RUN npm i
+RUN npm ci
 
-COPY /prisma ./prisma
+COPY server/prisma ./prisma
 
 RUN npx prisma generate
 
-COPY . .
+COPY server/. .
 
 EXPOSE 4000
 
-CMD [ "npm", "start" ]
+CMD ["npm", "start"]
