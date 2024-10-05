@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useFavoritesStore } from "@/store/favorite"
+import { useState, useCallback, useEffect } from "react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Star, Heart, Languages } from "lucide-react"
@@ -12,33 +13,30 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { useFavorites } from "./context/favorite-context"
+import { getQuoteOfTheDay } from "@/lib/quote"
+import { Quote } from "@/type/quote"
 
-interface Quote {
-    id: string
-    content: string
-    author: string
-    createdAt: Date
-    updatedAt: Date
-    isFavorite?: boolean
-}
 
-interface QuoteCardProps {
-    quote: Quote[]
-    onFavorite?: (quoteId: string) => Promise<void>
-    onNextQuote?: () => void
-    userId?: string
-}
-
-const QuoteCard = ({ quote, onFavorite, onNextQuote, userId }: QuoteCardProps) => {
-    const [currentIndex, setCurrentIndex] = useState(0)
+const QuoteCard = () => {
+    const [currentQuote, setCurrentQuote] = useState<Quote>()
     const [translatedText, setTranslatedText] = useState("")
     const [selectedLanguage, setSelectedLanguage] = useState("")
     const [isTranslating, setIsTranslating] = useState(false)
     const [isFavoriting, setIsFavoriting] = useState(false)
-    const { favorites, addFavorite, removeFavorite, isLoading, isFavorite } = useFavorites()
+    // const { favorites, addFavorite, removeFavorite } = useFavorites()
+    const { favorites, addFavorite, removeFavorite, toggleNextQuote, nextQuoteCount } = useFavoritesStore()
 
-    const currentQuote = quote[currentIndex]
+    const [quote, setQuote] = useState<Quote | null>(null);
+
+    useEffect(() => {
+        (async () => {
+            const quote = await getQuoteOfTheDay();
+            setCurrentQuote(quote);
+        })();
+    }, []);
+
+    const isFavorited = currentQuote ? favorites.some(fav => fav.id === currentQuote.id) : false
+
 
     // Handle translation logic
     const handleTranslate = useCallback(async (targetLang: string) => {
@@ -50,7 +48,7 @@ const QuoteCard = ({ quote, onFavorite, onNextQuote, userId }: QuoteCardProps) =
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    text: currentQuote.content,
+                    text: currentQuote?.content || "",
                     targetLanguage: targetLang
                 }),
             })
@@ -72,30 +70,70 @@ const QuoteCard = ({ quote, onFavorite, onNextQuote, userId }: QuoteCardProps) =
         }
     }, [currentQuote])
 
-    // Handle next quote
-    const handleNextQuote = useCallback(() => {
-        if (currentIndex < quote.length - 1) {
-            setCurrentIndex(currentIndex + 1)
+    // Refetch a new quote
+    const handleNextQuote = useCallback(async () => {
+        try {
+            const response = await getQuoteOfTheDay()
+            setCurrentQuote(response)
             setTranslatedText("")
             setSelectedLanguage("")
-            onNextQuote?.()
-        } else {
-            toast.error("No more quotes available")
+            toggleNextQuote()
+            toast.success("Loaded next quote")
+        } catch (error) {
+            console.error('Failed to load new quote:', error)
+            toast.error("Failed to load new quote")
         }
-    }, [currentIndex, quote.length, onNextQuote])
+    }, [])
+
+
+
 
     // Toggle the favorite state for the current quote
     const toggleFavorite = async () => {
-        // Check if the quote is already in the favorites
+        if (!currentQuote) return;
         const isFavorited = favorites.some(fav => fav.id === currentQuote.id)
 
         setIsFavoriting(true)
         try {
             if (isFavorited) {
-                await removeFavorite(currentQuote.id)  // Remove from favorites
+                await removeFavorite(currentQuote.id)
+                const response = await fetch('/api/favorites', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        quoteId: currentQuote.id
+                    }),
+                })
+
+                if (!response.ok) {
+                    throw new Error('Error fetching favorites');
+                }
+
+                const data = await response.json();
+                console.log(data)
                 toast.success("Removed from favorites")
             } else {
-                await addFavorite(currentQuote)  // Add to favorites
+                await addFavorite(currentQuote)
+
+                const response = await fetch('/api/favorites', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        quoteId: currentQuote.id,
+                        translatedText : translatedText
+                    }),
+                })
+
+                if (!response.ok) {
+                    throw new Error('Error fetching favorites');
+                }
+
+                const data = await response.json();
+                console.log(data)
                 toast.success("Added to favorites")
             }
         } catch (error) {
@@ -121,17 +159,30 @@ const QuoteCard = ({ quote, onFavorite, onNextQuote, userId }: QuoteCardProps) =
                 <h2 className="text-2xl font-semibold tracking-tight">
                     Quote of the Moment
                 </h2>
+                <div className="flex items-center space-x-1">
+                    <p className="text-sm text-muted-foreground">Tags:</p>
+                    <div className="flex flex-wrap gap-2">
+                        {currentQuote?.tags.map((tag, index) => (
+                            <span
+                                key={index}
+                                className="px-2 py-1 text-sm bg-gray-100 text-gray-600 rounded-md"
+                            >
+                                {tag.name}
+                            </span>
+                        ))}
+                    </div>
+                </div>
                 <div className="space-y-6 pt-10">
                     <p className="text-lg text-card-foreground">
-                        {translatedText ? translatedText : currentQuote.content}
+                        {translatedText ? translatedText : currentQuote?.content}
                     </p>
                     {translatedText && (
                         <p className="text-sm text-muted-foreground italic">
-                            Original: {currentQuote.content}
+                            Original: {currentQuote?.content}
                         </p>
                     )}
                     <p className="text-sm font-medium">
-                        - {currentQuote.author}
+                        - {currentQuote?.author}
                     </p>
                 </div>
 
@@ -158,8 +209,8 @@ const QuoteCard = ({ quote, onFavorite, onNextQuote, userId }: QuoteCardProps) =
                             variant="outline"
                             size="icon"
                             onClick={() => {
-                                setTranslatedText("");
-                                setSelectedLanguage("");
+                                setTranslatedText("")
+                                setSelectedLanguage("")
                             }}
                             disabled={isTranslating}
                             className="h-10 w-10"
@@ -178,17 +229,16 @@ const QuoteCard = ({ quote, onFavorite, onNextQuote, userId }: QuoteCardProps) =
 
             <CardFooter className="pt-6 flex justify-between gap-4">
                 <Button
-                    variant={favorites.some(fav => fav.id === currentQuote.id) ? "secondary" : "default"}
+                    variant={isFavorited ? "secondary" : "default"}
                     className="flex-1"
                     onClick={toggleFavorite}
-                    disabled={isFavoriting}
                 >
-                    {favorites.some(fav => fav.id === currentQuote.id) ? (
+                    {isFavorited ? (
                         <Heart className="mr-2 h-4 w-4 fill-current" />
                     ) : (
                         <Star className="mr-2 h-4 w-4" />
                     )}
-                    {favorites.some(fav => fav.id === currentQuote.id) ? "FAVORITED" : "FAVORITE"}
+                    {isFavorited ? "FAVORITED" : "FAVORITE"}
                 </Button>
                 <Button
                     variant="outline"

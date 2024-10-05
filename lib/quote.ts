@@ -1,11 +1,10 @@
-import { auth } from "@clerk/nextjs/server";
 
 const API_BASE_URL = "http://localhost:3333/api";
 
 
 
 export async function getQuoteOfTheDay() {
-    const response = await fetch(`${API_BASE_URL}/quotes/all`)
+    const response = await fetch(`${API_BASE_URL}/quotes/random`)
     if (!response.ok) {
         throw new Error('Failed to fetch quote')
     }
@@ -18,9 +17,4 @@ export async function getPopularQuotes() {
         throw new Error('Failed to fetch popular quotes')
     }
     return response.json()
-}
-
-
-export async function getFavorites() {
-    
 }

@@ -10,8 +10,6 @@ import { Star } from "lucide-react"
 import Link from "next/link"
 
 export default async function AdminDashboard() {
-  const quote = await getQuoteOfTheDay()
-
 
 
 
@@ -32,7 +30,7 @@ export default async function AdminDashboard() {
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="shadow-md">
             <CardContent className="p-6">
-              <QuoteCard quote={quote} />
+              <QuoteCard/>
             </CardContent>
           </Card>
 

@@ -2,36 +2,57 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Quote {
-  id        String   @id @default(cuid())
-  content   String
-  author    String
-  tags      Tag[]    // Add tags for better recommendations
-  likes     Like[]
-  category  String?
-  language  String   @default("en")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String     @id @default(uuid())
+  content      String
+  author       String
+  authorSlug   String
+  length       Int
+  dateAdded    DateTime   @default(now())
+  dateModified DateTime   @updatedAt
+  externalId   String     @unique
+  favorites    Favorite[]
+  tags         Tag[]      @relation("QuoteTags")
+
+  @@index([dateAdded])
+  @@index([externalId])
+  @@map("quotes")
+}
+
+model Favorite {
+  id                String   @id @default(uuid())
+  userId            String
+  quoteId           String
+  createdAt         DateTime @default(now())
+  translatedContent String?
+  quote             Quote    @relation(fields: [quoteId], references: [id])
+  user              User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, quoteId])
+  @@index([userId])
+  @@index([quoteId])
+  @@map("favorites")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String?    @unique
+  favorites Favorite[]
+
+  @@map("users")
 }
 
 model Tag {
-  id     String  @id @default(cuid())
+  id     String  @id @default(uuid())
   name   String  @unique
-  quotes Quote[]
-}
+  quotes Quote[] @relation("QuoteTags")
 
-model Like {
-  id        String   @id @default(cuid())
-  userId    String
-  quote     Quote    @relation(fields: [quoteId], references: [id])
-  quoteId   String
-  createdAt DateTime @default(now())
-
-  @@unique([userId, quoteId])
+  @@index([name])
+  @@map("tags")
 }

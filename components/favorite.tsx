@@ -5,23 +5,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Heart } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
+import { toast } from 'sonner'; // Make sure you have this dependency installed
+import { useFavoritesStore } from "@/store/favorite"; // import your store
+import { Quote, QuoteContent } from "@/type/quote";
 
 const FavoritesPage = () => {
-    // This would normally come from your data source
-    const [favorites, setFavorites] = useState([]);
+    const { favorites, addFavorite, removeFavorite } = useFavoritesStore();
     const [isLoading, setIsLoading] = useState(true);
+    const [isFavoriting, setIsFavoriting] = useState(false);
 
     useEffect(() => {
-        // Simulate loading favorites
+        // Simulate loading favorites (replace this with actual API call)
         const fetchFavorites = async () => {
             setIsLoading(true);
             try {
-                // Replace with actual API call
-                // const response = await getFavorites();
                 const response = await fetch('/api/favorites');
+
+                if (!response.ok) {
+                    throw new Error('Error fetching favorites');
+                }
+
                 const data = await response.json();
-                setFavorites(data);
+                // console.log('Response:', data);
+                data.forEach((quote: { quote: Quote }) => { addFavorite(quote.quote) }); // Update Zustand store with initial data
                 setIsLoading(false);
             } catch (error) {
                 console.error('Error fetching favorites:', error);
@@ -29,11 +35,37 @@ const FavoritesPage = () => {
             }
         };
 
+
+
         fetchFavorites();
-    }, []);
+    }, [addFavorite]);
 
 
-    console.log('Favorites:', favorites);
+    const handleRemoveFavorite = async (quote: Quote) => {
+        // const isFavorited = favorites.some(fav => fav.id === quote.id);
+        try {
+            await removeFavorite(quote.id);  // Call Zustand's removeFavorite action
+            const response = await fetch('/api/favorites', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    quoteId: quote.id
+                }),
+            })
+
+            if (!response.ok) {
+                throw new Error('Error fetching favorites');
+            }
+
+            const data = await response.json();
+            console.log(data)
+            toast.success("Removed from favorites")
+        } catch (error) {
+
+        }
+    };
 
     return (
         <main className="min-h-screen bg-background p-6">
@@ -80,18 +112,21 @@ const FavoritesPage = () => {
                             <ScrollArea className="h-[600px] pr-4">
                                 <div className="grid gap-4">
                                     {favorites.map((quote) => (
-                                        <Card key={quote.quote.id} className="p-4">
+                                        <Card key={quote.id} className="p-4">
                                             <div className="space-y-2">
-                                                <p className="text-lg">{quote.quote.content}</p>
+                                                <p className="text-lg">
+                                                    {quote.content}
+                                                </p>
                                                 <div className="flex items-center justify-between">
                                                     <p className="text-sm text-muted-foreground">
-                                                        - {quote.quote.author}
+                                                        - {quote.author}
                                                     </p>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => handleRemoveFavorite(quote.quote.id)}
+                                                        onClick={() => handleRemoveFavorite(quote)}
                                                         className="text-primary hover:text-primary/90"
+                                                        disabled={isFavoriting}
                                                     >
                                                         <Heart className="h-4 w-4 fill-current" />
                                                     </Button>
