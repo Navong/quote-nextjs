@@ -1,11 +1,9 @@
 // app/page.tsx
 
-import Header from "@/components/header"
 import QuoteCard from "@/components/quote-card"
 import { RecommendationSection } from "@/components/recommendation-section"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { getQuoteOfTheDay } from "@/lib/quote"
 import { Star } from "lucide-react"
 import Link from "next/link"
 

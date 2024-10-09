@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const API_BASE_URL = "http://localhost:3333/api";
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
   try {
     // Step 1: Authenticate user and extract userId
     const { userId } = await auth(); // From Clerk middleware or auth helper
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
 }
 
 
-export async function GET(req: NextRequest, res: NextResponse) {
+export async function GET() {
   try {
     // Get the userId from the auth function
     const { userId } = await auth();
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest, res: NextResponse) {
   }
 }
 
-export async function DELETE(req: NextRequest, res: NextResponse) {
+export async function DELETE(req: NextRequest) {
   try {
     // Step 1: Authenticate user and extract userId
     const { userId } = await auth(); // From Clerk middleware or auth helper

@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  front:
+    container_name: front
+    image: front
+    build:
+      context: .
+      dockerfile: front.dockerfile
+    restart: always
+    # ports:
+      # - "3003:3000"
+    labels:
+      - "traefik.http.routers.front.rule=Host(`quote-v2.navong.xyz`)"
+    depends_on:
+      - back
+    networks:
+      - traefik-network
+
+  back:
+    container_name: back
+    image: back
+    # ports:
+    #   # - "4001:4000"
+    build:
+      context: .
+      dockerfile: server/back.dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    labels:
+      - "traefik.http.routers.back.rule=(Host(`quote-v2.navong.xyz`) && PathPrefix(`/api`))"
+    networks:
+      - traefik-network
+    restart: always
+
+networks:
+  traefik-network:
+    external: true
+  postgres-network:
+    external: true
+
+volumes:
+  postgres-data:
+

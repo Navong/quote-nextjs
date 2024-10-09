@@ -1,10 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 
 const API_BASE_URL = "http://localhost:3333/api";
 
-export async function GET(req: NextRequest, res: NextResponse) {
+export async function GET() {
   const { userId } = await auth();
   const response = await fetch(`${API_BASE_URL}/recommendations/${userId}`)
   if (!response.ok) {

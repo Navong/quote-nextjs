@@ -2,9 +2,8 @@
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "sonner"
-import { ClerkProvider, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs"
+import { ClerkProvider} from "@clerk/nextjs"
 import Header from "@/components/header"
-import FavoritesPage from "@/components/favorite"
 import { FavoritesProvider } from "@/components/context/favorite-context"
 
 const inter = Inter({ subsets: ["latin"] })
