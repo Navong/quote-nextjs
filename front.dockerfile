@@ -1,5 +1,5 @@
 # Use an official Node.js runtime as the base image
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Set the working directory in the container
 WORKDIR /app
@@ -13,14 +13,11 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
-# Build the React application
+# Build the Next.js application
 RUN npm run build
-
-# Install serve to run the built app
-RUN npm install -g serve
 
 # Expose the port that the application will run on
 EXPOSE 3000
 
-# Serve the built React application
+# Start the Next.js application
 CMD ["npm", "run", "start"]

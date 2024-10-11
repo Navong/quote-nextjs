@@ -2,7 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 
-const API_BASE_URL = "http://localhost:3333/api";
+const API_BASE_URL = process.env.API_BASE_URL
+
 
 export async function GET() {
   const { userId } = await auth();
