@@ -144,18 +144,21 @@ const QuoteCard = () => {
                 <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
                     Quote of the Moment
                 </h2>
-                
+
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <p className="text-sm text-muted-foreground">Tags:</p>
                     <div className="flex flex-wrap gap-2">
-                        {currentQuote?.tags.map((tag, index) => (
-                            <span
-                                key={index}
-                                className="px-2 py-1 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-md"
-                            >
-                                {tag.name}
-                            </span>
-                        ))}
+                        {currentQuote?.tags && currentQuote.tags.length > 0 && (
+                            currentQuote?.tags.map((tag, index) => (
+                                <span
+                                    key={index}
+                                    className="px-2 py-1 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-md"
+                                >
+                                    {tag.name}
+                                </span>
+                            ))
+                        )}
+                      
                     </div>
                 </div>
 

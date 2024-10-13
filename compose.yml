@@ -1,6 +1,20 @@
 version: "3.9"
 
 services:
+  traefik:
+        image: traefik:v2.10
+        container_name: traefik
+        command:
+          - --api.insecure=true
+          - --providers.docker=true
+          - --entrypoints.web.address=:80
+        ports:
+          - "80:80" # HTTP port
+          - "8080:8080" # Traefik dashboard
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock # To communicate with the Docker daemon
+        networks:
+          - web
   front:
     container_name: front
     image: front
@@ -8,10 +22,15 @@ services:
       context: .
       dockerfile: front.dockerfile
     restart: always
-    # ports:
-      # - "3003:3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+      API_BASE_URL: ${API_BASE_URL}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
     labels:
-      - "traefik.http.routers.front.rule=Host(`quote-v2.navong.xyz`)"
+      - "traefik.http.routers.front.rule=Host(`test.navong.xyz`)"
     depends_on:
       - back
     networks:
@@ -28,7 +47,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
     labels:
-      - "traefik.http.routers.back.rule=(Host(`quote-v2.navong.xyz`) && PathPrefix(`/api`))"
+      - "traefik.http.routers.back.rule=(Host(`test.navong.xyz`) && PathPrefix(`/api`))"
     networks:
       - traefik-network
     restart: always
@@ -36,9 +55,12 @@ services:
 networks:
   traefik-network:
     external: true
-  postgres-network:
-    external: true
 
-volumes:
-  postgres-data:
+
+
+
+
+
+
+
 

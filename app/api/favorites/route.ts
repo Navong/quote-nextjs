@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
 
     // Step 2: Parse the incoming request body for quoteId
-    const { quoteId, translatedText } = req.method === "POST" ? await req.json() : {};
+    const { quoteId } = req.method === "POST" ? await req.json() : {};
     if (!quoteId) {
       return NextResponse.json(
         JSON.stringify({ error: "QuoteId is required" }),
@@ -31,12 +31,11 @@ export async function POST(req: NextRequest) {
     // Step 3: Prepare payload to send to external API
     const payload = {
       userId,
-      quoteId,
-      translatedText
+      quoteId
     };
 
     // Step 4: Send data to external API
-    const externalResponse = await fetch("http://localhost:3333/api/favorites", {
+    const externalResponse = await fetch(`${API_BASE_URL}/favorites`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
