@@ -23,26 +23,21 @@ const Header = () => {
             second: '2-digit',
             hour12: true,
         });
-    };
+    }
 
     return (
         <header className="bg-background p-3 sm:p-4 md:p-6">
-            <div className="max-w-4xl mx-auto">
-                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 p-3 sm:p-4 rounded-lg bg-card shadow-sm">
+            <div className="max-w-6xl mx-auto">
+                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-card shadow-sm">
                     {/* Left section with auth buttons */}
                     <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-4">
                         <div>
-                            <SignedOut>
-                                <SignInButton />
-                            </SignedOut>
                             <SignedIn>
-                                <UserButton afterSignOutUrl="/" />
+                                <UserButton/>
                             </SignedIn>
-                        </div>
-                        
-                        {/* Welcome message for mobile */}
-                        <div className="block sm:hidden text-base font-medium">
-                            {user ? `Welcome, ${user.fullName || "User"}` : "Welcome!"}
+                            <SignedOut>
+                                <SignInButton/>
+                            </SignedOut>
                         </div>
                     </div>
 
@@ -60,10 +55,9 @@ const Header = () => {
                     </div>
 
                     {/* Time display for mobile - shown below */}
-                    <div className="flex sm:hidden items-center justify-center gap-2 w-full">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
+                    <div className="block sm:hidden text-center">
                         <span className="text-sm font-medium text-muted-foreground">
-                            {formatTime(time)}
+                            <Clock className="h-4 w-4 inline-block mr-2" /> {formatTime(time)}
                         </span>
                     </div>
                 </div>

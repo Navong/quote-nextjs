@@ -69,7 +69,7 @@ const FavoritesPage = () => {
         <div className="min-h-screen flex flex-col bg-background">
             {/* Fixed Header */}
             <div className="sticky top-0 z-10 bg-background p-3 sm:p-4 md:p-6 pb-0">
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-6xl mx-auto">
                     <Card className="shadow-sm">
                         <CardContent className="p-3 sm:p-4">
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -93,7 +93,7 @@ const FavoritesPage = () => {
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pt-3">
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-6xl mx-auto">
                     <Card className="shadow-md">
                         <CardContent className="p-3 sm:p-4 md:p-6">
                             {isLoading ? (

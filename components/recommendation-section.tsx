@@ -158,10 +158,10 @@ export function RecommendationSection() {
   return (
     <div className="h-full w-full max-w-2xl mx-auto">
       <div className="p-0 sm:p-0">
-        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight sm:mb-6">
           Recommended for You
         </h2>
-        <ScrollArea className="h-[350px] sm:h-[400px] pr-2 sm:pr-4">
+        <ScrollArea className="h-full min-h-[500px] sm:h-[400px] pr-2 sm:pr-4">
           <div className="space-y-3 sm:space-y-4">
             {recommendations.map((quote) => (
               <motion.div
