@@ -19,17 +19,23 @@ app.use(cors({
 // Get a random quote
 app.get('/api/quotes/random', async (req, res) => {
   try {
-    const quotesCount = await prisma.quote.count();
-    const skip = Math.floor(Math.random() * quotesCount);
-    const randomQuote = await prisma.quote.findFirst({
-      skip: skip,
-    });
+    const count = await prisma.quote.count();
+    const randomSet = new Set();
+    let quote;
 
-    if (!randomQuote) {
+    while (!quote && randomSet.size < count) {
+        const random = Math.floor(Math.random() * count);
+        if (!randomSet.has(random)) {
+            randomSet.add(random);
+            quote = await prisma.quote.findFirst({ skip: random, include: { tags: true } });
+        }
+    }
+
+    if (!quote) {
       return res.status(404).json({ message: 'No quotes found' });
     }
 
-    res.status(200).json(randomQuote);
+    res.status(200).json(quote);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -223,5 +229,3 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
-
