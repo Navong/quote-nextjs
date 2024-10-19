@@ -1,5 +1,6 @@
 "use client";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React, { useState, useCallback, useEffect } from "react";
 import { useFavoritesStore } from "@/store/favorite";
 import { Star, Heart, Languages } from "lucide-react";
@@ -15,18 +16,31 @@ const QuoteCard = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const { favorites, addFavorite, removeFavorite, toggleNextQuote } = useFavoritesStore();
 
+    const [quotes, setQuotes] = useState<Quote[]>([]); // To store 100 quotes
+    const [currentIndex, setCurrentIndex] = useState(0); // To keep track of the current quote
+
+    console.log(currentIndex);
+
+
     useEffect(() => {
-        const fetchQuote = async () => {
-            const quote = await fetch('/api/quotes');
-            if (!quote.ok) {
-                throw new Error('Failed to fetch quotes');
+        const fetchQuotes = async () => {
+            try {
+                const response = await fetch('/api/quotes'); // Assuming API returns 100 random quotes
+                if (!response.ok) {
+                    throw new Error('Failed to fetch quotes');
+                }
+                const data = await response.json();
+                setQuotes(data); // Store 100 quotes in the state
+                setCurrentIndex(0); // Start with the first quote
+                setCurrentQuote(data[0]);
+                toast.success("Initially fetched quote");
+            } catch (error) {
+                console.error('Error fetching quotes:', error);
             }
-            const data = await quote.json();
-            console.log(data);
-            setCurrentQuote(data);
-        };        
-        fetchQuote();
-    }, []);
+        };
+
+        fetchQuotes();
+    }, []); // Run only once when the component is mounted
 
     const isFavorited = currentQuote ? favorites.some(fav => fav.id === currentQuote.id) : false;
 
@@ -57,22 +71,24 @@ const QuoteCard = () => {
         }
     }, [currentQuote]);
 
-    const handleNextQuote = useCallback(async () => {
-        try {
-            const response = await fetch('/api/quotes');
-            if (!response.ok) throw new Error('Failed to fetch quotes');
-
-            const data = await response.json();
-            setCurrentQuote(data);
+    const handleNextQuote = useCallback(() => {
+        if (quotes.length > 0) {
+            setCurrentIndex((prevIndex) => {
+                const nextIndex = (prevIndex + 1) % quotes.length;
+                setCurrentQuote(quotes[nextIndex]);
+                return nextIndex;
+            });
             setTranslatedText("");
             setSelectedLanguage("");
             toggleNextQuote();
-            toast.success("Loaded next quote");
-        } catch (error) {
-            console.error('Failed to load new quote:', error);
-            toast.error("Failed to load new quote");
+            // toast.success("Loaded next quote");
+        } else {
+            console.error("Quotes not loaded yet");
+            toast.error("No quotes available");
         }
-    }, [toggleNextQuote]);
+    }, [quotes, toggleNextQuote]);
+
+
 
     const toggleFavorite = async () => {
         if (!currentQuote) return;
@@ -208,8 +224,8 @@ const QuoteCard = () => {
                     onClick={toggleFavorite}
                     disabled={isFavoriting}
                     className={`flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 ${isFavorited
-                            ? "bg-gray-100 hover:bg-gray-200"
-                            : "bg-blue-600 hover:bg-blue-700 text-white"
+                        ? "bg-gray-100 hover:bg-gray-200"
+                        : "bg-blue-600 hover:bg-blue-700 text-white"
                         }`}
                 >
                     {isFavorited ? (
