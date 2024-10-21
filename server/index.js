@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const cors = require('cors');
+require('dotenv').config();
 const recommendedCache = {};
 
 const prisma = new PrismaClient();
@@ -16,26 +17,29 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Get a random quote
+// Get 100 random quotes
 app.get('/api/quotes/random', async (req, res) => {
   try {
     const count = await prisma.quote.count();
-    const randomSet = new Set();
-    let quote;
-
-    while (!quote && randomSet.size < count) {
-        const random = Math.floor(Math.random() * count);
-        if (!randomSet.has(random)) {
-            randomSet.add(random);
-            quote = await prisma.quote.findFirst({ skip: random, include: { tags: true } });
-        }
+    
+    if (count === 0) {
+      return res.status(404).json({ message: 'No quotes available' });
     }
 
-    if (!quote) {
-      return res.status(404).json({ message: 'No quotes found' });
+    // Generate 100 unique random indices
+    const randomIndices = new Set();
+    while (randomIndices.size < 100 && randomIndices.size < count) {
+      randomIndices.add(Math.floor(Math.random() * count));
     }
 
-    res.status(200).json(quote);
+    // Fetch quotes at the random indices
+    const randomQuotes = await prisma.quote.findMany({
+      skip: Array.from(randomIndices)[0], // This ensures we use the indices generated
+      take: 100,
+      include: { tags: true },
+    });
+
+    res.status(200).json(randomQuotes);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
