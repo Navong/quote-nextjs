@@ -21,7 +21,7 @@ app.use(cors({
 app.get('/api/quotes/random', async (req, res) => {
   try {
     const count = await prisma.quote.count();
-    
+
     if (count === 0) {
       return res.status(404).json({ message: 'No quotes available' });
     }
@@ -56,7 +56,13 @@ app.get('/api/favorites/:userId', async (req, res) => {
   try {
     const favorites = await prisma.favorite.findMany({
       where: { userId },
-      include: { quote: true }, // Include quote data for display purposes
+      include: {
+        quote: {
+          include: {
+            tags: true,
+          }
+        }
+      }, // Include quote data for display purposes
     });
 
     res.status(200).json(favorites);
@@ -124,7 +130,13 @@ app.get('/api/favorite/:userId', async (req, res) => {
   try {
     const favorites = await prisma.favorite.findMany({
       where: { userId },
-      include: { quote: true }, // Include quote data for display purposes
+      include: {
+        quote: {
+          include: {
+            tags: true, // This will include the tags relation within each quote
+          },
+        },
+      },
     });
 
     res.status(200).json(favorites);
@@ -211,9 +223,9 @@ app.get('/api/recommendations/:userId', async (req, res) => {
     });
 
     // Log recommendation tags for debugging
-    recommendations.forEach((rec, index) => {
-      console.log(`Recommendation ${index + 1} Tags:`, rec.tags ? rec.tags.map(tag => tag.name) : 'No tags available');
-    });
+    // recommendations.forEach((rec, index) => {
+    //   console.log(`Recommendation ${index + 1} Tags:`, rec.tags ? rec.tags.map(tag => tag.name) : 'No tags available');
+    // });
 
     // Add the newly recommended quotes to the cache for this user
     recommendedCache[userId] = [

@@ -10,7 +10,7 @@ import { useFavoritesStore } from "@/store/favorite";
 import { Quote } from "@/type/quote";
 
 const FavoritesPage = () => {
-    const { favorites, addFavorite, removeFavorite } = useFavoritesStore();
+    const { favorites, addFavorite, removeFavorite, AdminId } = useFavoritesStore();
     const [isLoading, setIsLoading] = useState(true);
     const [isFavoriting, setIsFavoriting] = useState(false);
 
@@ -18,15 +18,21 @@ const FavoritesPage = () => {
         const fetchFavorites = async () => {
             setIsLoading(true);
             try {
-                const response = await fetch('/api/favorites');
+                // const response = await fetch('/api/favorites');
+                const response = await fetch(`/api/favorites/${AdminId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                });
 
                 if (!response.ok) {
                     throw new Error('Error fetching favorites');
                 }
 
+
                 const data = await response.json();
-                data.forEach((quote: { quote: Quote }) => { 
-                    addFavorite(quote.quote) 
+                console.log(data)
+                data.forEach((quote: { quote: Quote }) => {
+                    addFavorite(quote.quote)
                 });
                 setIsLoading(false);
             } catch (error) {
@@ -43,7 +49,7 @@ const FavoritesPage = () => {
         setIsFavoriting(true);
         try {
             await removeFavorite(quote.id);
-            const response = await fetch('/api/favorites', {
+            const response = await fetch(`/api/favorites/${AdminId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -120,8 +126,8 @@ const FavoritesPage = () => {
                             ) : (
                                 <div className="grid gap-3 sm:gap-4">
                                     {favorites.map((quote) => (
-                                        <Card 
-                                            key={quote.id} 
+                                        <Card
+                                            key={quote.id}
                                             className="p-3 sm:p-4 hover:shadow-md transition-shadow duration-200"
                                         >
                                             <div className="space-y-2 sm:space-y-3">

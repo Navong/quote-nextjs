@@ -11,3 +11,9 @@ scp back.tar dev@ras.navong.xyz:/home/pi/
 docker load < /home/pi/back.tar
 docker images
 ```
+
+
+```bash
+docker tag back:latest nolandev1/back:latest
+docker push nolandev1/back:latest
+```
