@@ -17,7 +17,7 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
     favorites: [],
     nextQuoteCount: 0,
     translatedContent: '',
-    AdminId: 'user_2qf1U2PGAnApUKKEta30olqRlZa',
+    AdminId: `guest_${Math.random().toString(36).substring(2, 10)}`,
 
     addFavorite: async (quote) => {
         set((state) => {

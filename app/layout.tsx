@@ -4,6 +4,7 @@ import "./globals.css"
 import { Toaster } from "sonner"
 // import { ClerkProvider, RedirectToSignIn, SignedIn, SignedOut } from "@clerk/nextjs"
 import Header from "@/components/header"
+import Footer from "@/components/footer"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
@@ -27,7 +28,7 @@ export default function RootLayout({
               {children}
               <Toaster position="top-center"/>
             </main>
-            {/* <Footer /> */}
+            <Footer />
           </div>
         {/* </SignedIn>
         <SignedOut>

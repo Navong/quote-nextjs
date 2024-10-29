@@ -26,7 +26,10 @@ const QuoteCard = () => {
                 setQuotes(data);
                 setCurrentIndex(0);
                 setCurrentQuote(data[0]);
-                toast.success("Initially fetched quote");
+                const toastId = toast.success("Initially fetched quote");
+                setTimeout(() => {
+                    toast.dismiss(toastId);
+                }, 1000);
             } catch (error) {
                 console.log(currentIndex);
                 console.error('Error fetching quotes:', error);
@@ -53,7 +56,10 @@ const QuoteCard = () => {
             const data = await response.json();
             setTranslatedText(data.translatedText);
             setSelectedLanguage(targetLang);
-            toast.success("Translation successful");
+            const toastId = toast.success("Translation successful");
+            setTimeout(() => {
+                toast.dismiss(toastId);
+            }, 1000);
         } catch (error) {
             console.error('Translation failed:', error);
             toast.error("Translation failed");
@@ -90,7 +96,10 @@ const QuoteCard = () => {
                     body: JSON.stringify({ quoteId: currentQuote.id }),
                 });
                 if (!response.ok) throw new Error('Error fetching favorites');
-                toast.success("Removed from favorites");
+                const toastId = toast.success("Removed from favorites");
+                setTimeout(() => {
+                    toast.dismiss(toastId);
+                }, 1000);
             } else {
                 await addFavorite(currentQuote);
                 const response = await fetch(`/api/favorites/${AdminId}`, {
@@ -102,7 +111,10 @@ const QuoteCard = () => {
                     }),
                 });
                 if (!response.ok) throw new Error('Error fetching favorites');
-                toast.success("Added to favorites");
+                const toastId = toast.success("Added to favorites");
+                setTimeout(() => {
+                    toast.dismiss(toastId);
+                }, 1000);
             }
         } catch (error) {
             console.error('Failed to toggle favorite:', error);

@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function AdminDashboard() {
   return (
-    <main className="bg-background min-h-screen">
+    <main className="bg-background h-full">
       {/* Mobile Layout */}
       <div className="block md:hidden">
         <div className="p-4 space-y-4">
