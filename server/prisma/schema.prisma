@@ -49,10 +49,11 @@ model User {
 }
 
 model Tag {
-  id     String  @id @default(uuid())
-  name   String  @unique
-  quotes Quote[] @relation("QuoteTags")
+  id       String     @id @default(uuid())
+  name     String     @unique
+  quotes   Quote[]    @relation("QuoteTags")
 
   @@index([name])
   @@map("tags")
 }
+

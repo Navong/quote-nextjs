@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Quote } from '@/type/quote';
 
 interface FavoritesState {
+    AdminId: string;
     favorites: Quote[];
     translatedContent: string;
     setTranslatedContent: (translatedContent: string) => void;
@@ -16,6 +17,7 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
     favorites: [],
     nextQuoteCount: 0,
     translatedContent: '',
+    AdminId: 'user_2qf1U2PGAnApUKKEta30olqRlZa',
 
     addFavorite: async (quote) => {
         set((state) => {
