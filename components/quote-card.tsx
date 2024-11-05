@@ -25,7 +25,7 @@ const QuoteCard = () => {
                 const data = await response.json();
                 setQuotes(data);
                 setCurrentIndex(0);
-                setCurrentQuote(data[currentIndex]);
+                setCurrentQuote(data[0]);
                 toast.success("Initially fetched quote");
             } catch (error) {
                 console.log(currentIndex);
