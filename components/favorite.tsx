@@ -16,7 +16,7 @@ const FavoritesPage = () => {
 
     useEffect(() => {
         const fetchFavorites = async () => {
-            setIsLoading(true);
+            setIsLoading(false);
             try {
                 // const response = await fetch('/api/favorites');
                 const response = await fetch(`/api/favorites/${AdminId}`, {
