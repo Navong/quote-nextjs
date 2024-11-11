@@ -11,7 +11,7 @@ import { Quote } from "@/type/quote";
 
 const FavoritesPage = () => {
     const { favorites, addFavorite, removeFavorite, AdminId } = useFavoritesStore();
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [isFavoriting, setIsFavoriting] = useState(false);
 
     useEffect(() => {
