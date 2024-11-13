@@ -43,7 +43,7 @@ const FavoritesPage = () => {
         };
 
         fetchFavorites();
-    }, [addFavorite]);
+    }, [addFavorite, AdminId]);
 
     const handleRemoveFavorite = async (quote: Quote) => {
         setIsFavoriting(true);
