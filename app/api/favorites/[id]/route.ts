@@ -32,14 +32,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string, translatedContent?: string }> }) {
     try {
 
         const userId = (await params).id
-
-        console.log(userId)
-
-        const { quoteId } = req.method === "POST" ? await req.json() : {};
+        
+        const { quoteId, translatedContent } = req.method === "POST" ? await req.json() : {};
 
         if (!quoteId) {
             return NextResponse.json(
@@ -48,10 +46,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             );
         }
 
+        console.log(userId, quoteId, translatedContent)
+
         // Step 3: Prepare payload to send to external API
         const payload = {
             userId,
-            quoteId
+            quoteId,
+            translatedContent,
         };
 
         // Step 4: Send data to external API

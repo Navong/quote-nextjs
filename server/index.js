@@ -74,13 +74,13 @@ app.get('/api/favorites/:userId', async (req, res) => {
 
 // Add a quote to favorites
 app.post('/api/favorites', async (req, res) => {
-  const { userId, quoteId, translatedText } = req.body;
+  const { userId, quoteId, translatedContent } = req.body;
 
   if (!userId || !quoteId) {
     return res.status(400).json({ error: 'userId and quoteId are required' });
   }
 
-  console.log(`Adding favorite for user ${userId} and quote ${quoteId}`);
+  console.log(req.body);
 
   try {
     // Ensure user exists or create the user
@@ -108,7 +108,7 @@ app.post('/api/favorites', async (req, res) => {
       data: {
         userId,
         quoteId,
-        translatedContent: translatedText || undefined, // Only set if translatedText is truthy
+        translatedContent, // Only set if translatedText is truthy
       },
     });
 

@@ -1,349 +1,177 @@
-'use client';
+"use client"
 
-import React, { useState, useCallback, useEffect } from "react";
-import { useFavoritesStore } from "@/store/favorite";
-import { Star, Heart, Languages } from "lucide-react";
-import { toast } from "sonner";
-import { Quote } from "@/type/quote";
+import type React from "react"
+import { useState, useCallback, useEffect } from "react"
+import { useFavoriteStore } from "@/store/useFavoriteStore"
+import { RefreshCcw } from "lucide-react"
+import { toast } from "sonner"
+import type { Quote } from "@/types/quote"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-const QuoteCard = () => {
-    const [currentQuote, setCurrentQuote] = useState<Quote>({} as Quote);
-    const [translatedText, setTranslatedText] = useState("");
-    const [selectedLanguage, setSelectedLanguage] = useState("");
-    const [isTranslating, setIsTranslating] = useState(false);
-    const [isFavoriting, setIsFavoriting] = useState(false);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const { favorites, addFavorite, removeFavorite, toggleNextQuote, AdminId } = useFavoritesStore();
-    const [quotes, setQuotes] = useState<Quote[]>([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
+const QuoteCard: React.FC = () => {
+  const [translatedText, setTranslatedText] = useState("")
+  const [selectedLanguage, setSelectedLanguage] = useState("")
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [isFavorited, setIsFavorited] = useState(false)
+  const { currentQuote, favorites, fetchRandomQuotes, addToFavorites, removeFromFavorites, isLoading } =
+    useFavoriteStore()
 
-    useEffect(() => {
-        const fetchQuotes = async () => {
-            try {
-                const response = await fetch('/api/quotes');
-                if (!response.ok) throw new Error('Failed to fetch quotes');
-                const data = await response.json();
-                setQuotes(data);
-                setCurrentIndex(0);
-                setCurrentQuote(data[0]);
-                const toastId = toast.success("Initially fetched quote");
-                setTimeout(() => {
-                    toast.dismiss(toastId);
-                }, 1000);
-            } catch (error) {
-                console.log(currentIndex);
-                console.error('Error fetching quotes:', error);
-            }
-        };
-        fetchQuotes();
-    }, []);
+  const languages = [
+    { value: "km", label: "Khmer" },
+    { value: "ko", label: "Korean" },
+    { value: "ja", label: "Japanese" },
+  ]
 
-    const isFavorited = currentQuote ? favorites.some(fav => fav.id === currentQuote.id) : false;
+  useEffect(() => {
+    fetchRandomQuotes()
+  }, [fetchRandomQuotes])
 
-    const handleTranslate = useCallback(async (targetLang: string) => {
-        setIsTranslating(true);
-        setIsDropdownOpen(false);
-        try {
-            const response = await fetch('/api/translate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text: currentQuote?.content || "",
-                    targetLanguage: targetLang
-                }),
-            });
-            if (!response.ok) throw new Error('Translation failed');
-            const data = await response.json();
-            setTranslatedText(data.translatedText);
-            setSelectedLanguage(targetLang);
-            const toastId = toast.success("Translation successful");
-            setTimeout(() => {
-                toast.dismiss(toastId);
-            }, 1000);
-        } catch (error) {
-            console.error('Translation failed:', error);
-            toast.error("Translation failed");
-        } finally {
-            setIsTranslating(false);
+  useEffect(() => {
+    if (currentQuote) {
+      const favorited = favorites.some((fav) => fav.quote?.id === currentQuote.id)
+      setIsFavorited(favorited)
+    }
+  }, [currentQuote, favorites])
+
+  const handleTranslate = useCallback(
+    async (targetLang: string) => {
+      if (!currentQuote) return
+
+      setIsTranslating(true)
+      try {
+        const response = await fetch("/api/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: currentQuote.content,
+            targetLanguage: targetLang,
+          }),
+        })
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
-    }, [currentQuote]);
+        const data = await response.json()
+        setTranslatedText(data.translatedText)
+        setSelectedLanguage(targetLang)
+      } catch (error) {
+        console.error("Translation failed:", error)
+        toast.error("Translation failed")
+      } finally {
+        setIsTranslating(false)
+      }
+    },
+    [currentQuote],
+  )
 
-    const handleNextQuote = useCallback(() => {
-        if (quotes.length > 0) {
-            setCurrentIndex((prevIndex) => {
-                const nextIndex = (prevIndex + 1) % quotes.length;
-                setCurrentQuote(quotes[nextIndex]);
-                return nextIndex;
-            });
-            setTranslatedText("");
-            setSelectedLanguage("");
-            toggleNextQuote();
+  const handleNextQuote = useCallback(() => {
+    fetchRandomQuotes()
+    setTranslatedText("")
+    setSelectedLanguage("")
+  }, [fetchRandomQuotes])
+
+  const handleToggleFavorite = useCallback(async () => {
+    if (!currentQuote) return
+
+    try {
+      if (isFavorited) {
+        const favoriteToRemove = favorites.find((fav) => fav.quote?.id === currentQuote.id)
+        if (favoriteToRemove) {
+          await removeFromFavorites(favoriteToRemove.id, favoriteToRemove.quote.id)
+          setIsFavorited(false)
+          toast.success("Removed from favorites")
         } else {
-            console.error("Quotes not loaded yet");
-            toast.error("No quotes available");
+          throw new Error("Favorite not found")
         }
-    }, [quotes, toggleNextQuote]);
+      } else {
+        await addToFavorites(currentQuote, translatedText)
+        setIsFavorited(true)
+        toast.success("Added to favorites")
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to update favorites")
+    }
+  }, [currentQuote, isFavorited, favorites, addToFavorites, removeFromFavorites, translatedText])
 
-    const toggleFavorite = async () => {
-        if (!currentQuote) return;
-        setIsFavoriting(true);
-        try {
-            if (isFavorited) {
-                await removeFavorite(currentQuote.id);
-                const response = await fetch(`/api/favorites/${AdminId}`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ quoteId: currentQuote.id }),
-                });
-                if (!response.ok) throw new Error('Error fetching favorites');
-                const toastId = toast.success("Removed from favorites");
-                setTimeout(() => {
-                    toast.dismiss(toastId);
-                }, 1000);
-            } else {
-                await addFavorite(currentQuote);
-                const response = await fetch(`/api/favorites/${AdminId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        quoteId: currentQuote.id,
-                        translatedText: translatedText,
-                    }),
-                });
-                if (!response.ok) throw new Error('Error fetching favorites');
-                const toastId = toast.success("Added to favorites");
-                setTimeout(() => {
-                    toast.dismiss(toastId);
-                }, 1000);
-            }
-        } catch (error) {
-            console.error('Failed to toggle favorite:', error);
-            toast.error("Failed to toggle favorite");
-        } finally {
-            setIsFavoriting(false);
-        }
-    };
-
-    const languages = [
-        { value: "es", label: "Spanish" },
-        { value: "ko", label: "Korean" },
-        { value: "ja", label: "Japanese" },
-        { value: "ru", label: "Russian" },
-        { value: "fr", label: "French" },
-        { value: "kh", label: "Khmer" },
-    ];
-
+  if (isLoading) {
     return (
-        <div className="w-full max-w-2xl mx-auto bg-white rounded-lg">
-            {/* Mobile Version */}
-            <div className="block md:hidden min-h-[400px] p-4">
-                <h2 className="text-xl font-semibold tracking-tight mb-4">
-                    Quote of the Moment
-                </h2>
+      <Card className="bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+        <CardContent className="p-6">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
-                <div className="space-y-4">
-                    <div className="flex flex-col gap-2">
-                        <p className="text-sm text-gray-600">Tags:</p>
-                        <div className="flex flex-wrap gap-2">
-                            {currentQuote?.tags?.map((tag, index) => (
-                                <span key={index} className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md">
-                                    {tag.name}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
+  if (!currentQuote) {
+    return (
+      <Card className="bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+        <CardContent className="p-6">
+          <div className="text-center">
+            <p className="text-lg text-gray-600">No quote available</p>
+            <Button onClick={handleNextQuote} className="mt-4">
+              Try Again
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
-                    <div className="space-y-4">
-                        <p className="text-base text-gray-800 leading-relaxed">
-                            {translatedText || currentQuote?.content}
-                        </p>
-                        {translatedText && (
-                            <p className="text-xs text-gray-600 italic leading-relaxed">
-                                Original: {currentQuote?.content}
-                            </p>
-                        )}
-                        <p className="text-sm font-medium">
-                            - {currentQuote?.author}
-                        </p>
-                    </div>
+  return (
+    <Card className="bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+      <CardContent className="p-6">
+        <div className="space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-semibold">Quote of the Moment</h2>
+            <Button variant="ghost" size="icon" onClick={handleNextQuote} className="rounded-lg hover:bg-gray-100">
+              <RefreshCcw className="h-5 w-5" />
+            </Button>
+          </div>
 
-                    <div className="space-y-3">
-                        <div className="relative">
-                            <button
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className="w-full px-4 py-2 text-left bg-white border rounded-lg flex justify-between items-center"
-                                disabled={isTranslating}
-                            >
-                                <span className="text-sm text-gray-700">
-                                    {selectedLanguage ? languages.find(l => l.value === selectedLanguage)?.label : "Translate to..."}
-                                </span>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
+          <div className="pl-4 border-l-4 border-blue-500">
+            <blockquote className="text-lg text-gray-700 leading-relaxed">
+              "{translatedText || currentQuote.content}"
+            </blockquote>
+            <p className="mt-2 text-gray-600">- {currentQuote.author}</p>
+          </div>
 
-                            {isDropdownOpen && (
-                                <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
-                                    {languages.map((lang) => (
-                                        <button
-                                            key={lang.value}
-                                            className="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
-                                            onClick={() => handleTranslate(lang.value)}
-                                        >
-                                            {lang.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {selectedLanguage && (
-                            <button
-                                onClick={() => {
-                                    setTranslatedText("");
-                                    setSelectedLanguage("");
-                                }}
-                                disabled={isTranslating}
-                                className="w-full p-2 border rounded-lg hover:bg-gray-50 flex items-center justify-center"
-                            >
-                                <Languages className="h-4 w-4" />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                <div className="mt-6 space-y-3">
-                    <button
-                        onClick={toggleFavorite}
-                        disabled={isFavoriting}
-                        className={`w-full py-2 px-4 rounded-lg flex items-center justify-center gap-2 ${
-                            isFavorited ? "bg-gray-100 hover:bg-gray-200" : "bg-blue-600 hover:bg-blue-700 text-white"
-                        }`}
-                    >
-                        {isFavorited ? (
-                            <Heart className="h-4 w-4 fill-current" />
-                        ) : (
-                            <Star className="h-4 w-4" />
-                        )}
-                        {isFavorited ? "FAVORITED" : "FAVORITE"}
-                    </button>
-                    <button
-                        onClick={handleNextQuote}
-                        className="w-full py-2 px-4 border rounded-lg hover:bg-gray-50"
-                    >
-                        NEXT QUOTE
-                    </button>
-                </div>
+          {currentQuote.tags && (
+            <div className="flex flex-wrap gap-2">
+              {currentQuote.tags.map((tag) => (
+                <span key={tag.id} className="px-3 py-1 text-sm text-gray-600 rounded-full bg-gray-50">
+                  {tag.name}
+                </span>
+              ))}
             </div>
+          )}
 
-            {/* Desktop Version */}
-            <div className="hidden md:block min-h-[500px]">
-                <div className="p-6 space-y-6">
-                    <h2 className="text-2xl font-semibold tracking-tight">
-                        Quote of the Moment
-                    </h2>
-
-                    <div className="flex items-center gap-2">
-                        <p className="text-sm text-gray-600">Tags:</p>
-                        <div className="flex flex-wrap gap-2">
-                            {currentQuote?.tags?.map((tag, index) => (
-                                <span key={index} className="px-2 py-1 text-sm bg-gray-100 text-gray-600 rounded-md">
-                                    {tag.name}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="space-y-6 py-6">
-                        <p className="text-lg text-gray-800 leading-relaxed">
-                            {translatedText || currentQuote?.content}
-                        </p>
-                        {translatedText && (
-                            <p className="text-sm text-gray-600 italic leading-relaxed">
-                                Original: {currentQuote?.content}
-                            </p>
-                        )}
-                        <p className="text-sm font-medium">
-                            - {currentQuote?.author}
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <div className="relative w-[180px]">
-                            <button
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className="w-full px-4 py-2 text-left bg-white border rounded-lg flex justify-between items-center"
-                                disabled={isTranslating}
-                            >
-                                <span className="text-sm text-gray-700">
-                                    {selectedLanguage ? languages.find(l => l.value === selectedLanguage)?.label : "Translate to..."}
-                                </span>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-
-                            {isDropdownOpen && (
-                                <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
-                                    {languages.map((lang) => (
-                                        <button
-                                            key={lang.value}
-                                            className="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
-                                            onClick={() => handleTranslate(lang.value)}
-                                        >
-                                            {lang.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {selectedLanguage && (
-                            <button
-                                onClick={() => {
-                                    setTranslatedText("");
-                                    setSelectedLanguage("");
-                                }}
-                                disabled={isTranslating}
-                                className="p-2 border rounded-lg hover:bg-gray-50"
-                            >
-                                <Languages className="h-4 w-4" />
-                            </button>
-                        )}
-
-                        {isTranslating && (
-                            <p className="text-sm text-gray-600 animate-pulse">
-                                Translating...
-                            </p>
-                        )}
-                    </div>
-                </div>
-
-                <div className="p-6 border-t flex gap-4">
-                    <button
-                        onClick={toggleFavorite}
-                        disabled={isFavoriting}
-                        className={`flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 ${
-                            isFavorited ? "bg-gray-100 hover:bg-gray-200" : "bg-blue-600 hover:bg-blue-700 text-white"
-                        }`}
-                    >
-                        {isFavorited ? (
-                            <Heart className="h-4 w-4 fill-current" />
-                        ) : (
-                            <Star className="h-4 w-4" />
-                        )}
-                        {isFavorited ? "FAVORITED" : "FAVORITE"}
-                    </button>
-                    <button
-                        onClick={handleNextQuote}
-                        className="flex-1 py-2 px-4 border rounded-lg hover:bg-gray-50"
-                    >
-                        NEXT QUOTE
-                    </button>
-                </div>
-            </div>
+          <div className="flex gap-4">
+            <Select value={selectedLanguage} onValueChange={handleTranslate} disabled={isTranslating}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Translate to..." />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map((lang) => (
+                  <SelectItem key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleToggleFavorite} variant="default" className="flex-1 bg-gray-900 hover:bg-gray-800">
+              {isFavorited ? "Remove from Favorites" : "Add to Favorites"}
+            </Button>
+          </div>
         </div>
-    );
-};
+      </CardContent>
+    </Card>
+  )
+}
 
-export default QuoteCard;
+export default QuoteCard
+

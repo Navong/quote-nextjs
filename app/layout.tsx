@@ -1,15 +1,14 @@
-// app/layout.tsx
-import { Inter } from "next/font/google"
 import "./globals.css"
-import { Toaster } from "sonner"
-// import { ClerkProvider, RedirectToSignIn, SignedIn, SignedOut } from "@clerk/nextjs"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
 import Header from "@/components/header"
-import Footer from "@/components/footer"
+import { Toaster } from "sonner"
+
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata = {
-  title: "Daily Quotes App",
-  description: "Get inspired with daily quotes",
+export const metadata: Metadata = {
+  title: "Quote App",
+  description: "Discover and save your favorite quotes",
 }
 
 export default function RootLayout({
@@ -18,25 +17,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    // <ClerkProvider>
     <html lang="en">
       <body className={inter.className}>
-        {/* <SignedIn> */}
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-1 max-w-7xl mx-auto w-full">
-              {children}
-              <Toaster position="top-center"/>
-            </main>
-            <Footer />
-          </div>
-        {/* </SignedIn>
-        <SignedOut>
-          <RedirectToSignIn />
-        </SignedOut> */}
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <Toaster />
+          <main className="flex-grow">{children}</main>
+        </div>
       </body>
     </html>
-    // </ClerkProvider>
   )
 }
 
