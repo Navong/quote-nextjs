@@ -51,7 +51,18 @@ export const useFavoriteStore = create<FavoriteStore>((set, get) => ({
   },
 
   addToFavorites: async (quote: Quote, translatedText?: string) => {
-    const { userId } = get()
+    const { userId, favorites } = get()
+    // Optimistically update the state
+    const optimisticFavorite: FavoriteQuote = {
+      id: Date.now().toString(), // Temporary ID
+      userId,
+      quoteId: quote.id,
+      createdAt: new Date().toISOString(),
+      translatedContent: translatedText,
+      quote,
+    }
+    set({ favorites: [...favorites, optimisticFavorite] })
+
     try {
       const response = await fetch(`/api/favorites/${userId}`, {
         method: "POST",
@@ -62,18 +73,25 @@ export const useFavoriteStore = create<FavoriteStore>((set, get) => ({
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       const newFavorite: FavoriteQuote = await response.json()
+      // Update with the actual data from the server
       set((state) => ({
-        favorites: [...state.favorites, newFavorite],
-        currentQuote: state.currentQuote, // Force re-render of components using currentQuote
+        favorites: state.favorites.map((fav) => (fav.id === optimisticFavorite.id ? newFavorite : fav)),
       }))
     } catch (error) {
+      // Revert the optimistic update on error
+      set((state) => ({
+        favorites: state.favorites.filter((fav) => fav.id !== optimisticFavorite.id),
+      }))
       console.error("Error adding to favorites:", error)
       throw error
     }
   },
 
   removeFromFavorites: async (favoriteId: string, quoteId: string) => {
-    const { userId } = get()
+    const { userId, favorites } = get()
+    // Optimistically update the state
+    set({ favorites: favorites.filter((fav) => fav.id !== favoriteId) })
+
     try {
       const response = await fetch(`/api/favorites/${userId}`, {
         method: "DELETE",
@@ -83,11 +101,9 @@ export const useFavoriteStore = create<FavoriteStore>((set, get) => ({
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      set((state) => ({
-        favorites: state.favorites.filter((fav) => fav.id !== favoriteId),
-        currentQuote: state.currentQuote, // Force re-render of components using currentQuote
-      }))
     } catch (error) {
+      // Revert the optimistic update on error
+      set({ favorites })
       console.error("Error removing from favorites:", error)
       throw error
     }

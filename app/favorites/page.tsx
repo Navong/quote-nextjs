@@ -1,5 +1,6 @@
 "use client"
 
+/* eslint-disable react/no-unescaped-entities */ 
 import React, { useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -7,15 +8,6 @@ import { Heart, Loader2 } from "lucide-react"
 import { useFavoriteStore } from "@/store/useFavoriteStore"
 import Link from "next/link"
 import { toast } from "sonner"
-
-const getLanguageName = (code: string) => {
-  const languages = {
-    km: "Khmer",
-    ko: "Korean",
-    ja: "Japanese",
-  }
-  return languages[code as keyof typeof languages] || code
-}
 
 export default function FavoritesPage() {
   const { favorites, isLoading, fetchFavorites, removeFromFavorites } = useFavoriteStore()
@@ -40,18 +32,18 @@ export default function FavoritesPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">My Favorites</h1>
+      {/* <h1 className="text-xl font-bold mb-6 text-foreground">My Favorites</h1> */}
       {favorites.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="mb-4">You haven't added any favorites yet.</p>
+            <p className="mb-4 text-foreground">You haven't added any favorites yet.</p>
             <Link href="/" passHref>
               <Button>Discover Quotes</Button>
             </Link>
@@ -60,27 +52,25 @@ export default function FavoritesPage() {
       ) : (
         <div className="space-y-4">
           {favorites.map((favorite) => (
-            <Card key={favorite.id} className="bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+            <Card key={favorite.id} className="bg-background shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  <div className="pl-4 border-l-4 border-blue-500">
-                    <blockquote className="text-lg text-gray-700 leading-relaxed">
+                  <div className="pl-4 border-l-4 border-primary">
+                    <blockquote className="text-lg text-foreground leading-relaxed">
                       "{favorite.translatedContent || favorite.quote?.content || "Quote content unavailable"}"
                     </blockquote>
-                    <p className="mt-2 text-gray-600">- {favorite.quote?.author || "Unknown author"}</p>
+                    <p className="mt-2 text-muted-foreground">- {favorite.quote?.author || "Unknown author"}</p>
                   </div>
                   {favorite.translatedContent && favorite.quote?.content && (
-                    <p className="text-sm text-gray-500">Original: "{favorite.quote.content}"</p>
+                    <p className="text-sm text-muted-foreground">Original: "{favorite.quote.content}"</p>
                   )}
-                  {/* {favorite.translatedContent && (
-                    <p className="text-sm text-blue-600">
-                      Translated to: {getLanguageName(favorite.translatedLanguage)}
-                    </p>
-                  )} */}
                   {favorite.quote?.tags && (
                     <div className="flex flex-wrap gap-2">
                       {favorite.quote.tags.map((tag) => (
-                        <span key={tag.id} className="px-3 py-1 text-sm text-gray-600 rounded-full bg-gray-50">
+                        <span
+                          key={tag.id}
+                          className="px-3 py-1 text-sm text-muted-foreground rounded-full bg-secondary"
+                        >
                           {tag.name}
                         </span>
                       ))}

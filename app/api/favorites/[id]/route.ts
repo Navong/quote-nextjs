@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 
-const API_BASE_URL = process.env.API_BASE_URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -110,6 +110,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
             userId,
             quoteId,
         };
+
+        console.log(userId, quoteId)
 
         // Step 4: Send data to external API
         const externalResponse = await fetch(`${API_BASE_URL}/favorites/${userId}`, {

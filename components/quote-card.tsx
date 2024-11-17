@@ -1,11 +1,13 @@
 "use client"
 
+
+/* eslint-disable react/no-unescaped-entities */ 
 import type React from "react"
 import { useState, useCallback, useEffect } from "react"
 import { useFavoriteStore } from "@/store/useFavoriteStore"
 import { RefreshCcw } from "lucide-react"
 import { toast } from "sonner"
-import type { Quote } from "@/types/quote"
+// import type { Quote } from "@/types/quote"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -15,11 +17,12 @@ const QuoteCard: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState("")
   const [isTranslating, setIsTranslating] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
-  const { currentQuote, favorites, fetchRandomQuotes, addToFavorites, removeFromFavorites, isLoading } =
+  const [isAddingToFavorites, setIsAddingToFavorites] = useState(false)
+  const { currentQuote, favorites, fetchRandomQuotes, addToFavorites, isLoading } =
     useFavoriteStore()
 
   const languages = [
-    { value: "km", label: "Khmer" },
+    { value: "kh", label: "Khmer" },
     { value: "ko", label: "Korean" },
     { value: "ja", label: "Japanese" },
   ]
@@ -69,38 +72,31 @@ const QuoteCard: React.FC = () => {
     fetchRandomQuotes()
     setTranslatedText("")
     setSelectedLanguage("")
+    setIsFavorited(false)
   }, [fetchRandomQuotes])
 
   const handleToggleFavorite = useCallback(async () => {
-    if (!currentQuote) return
+    if (!currentQuote || isFavorited) return
 
+    setIsAddingToFavorites(true)
     try {
-      if (isFavorited) {
-        const favoriteToRemove = favorites.find((fav) => fav.quote?.id === currentQuote.id)
-        if (favoriteToRemove) {
-          await removeFromFavorites(favoriteToRemove.id, favoriteToRemove.quote.id)
-          setIsFavorited(false)
-          toast.success("Removed from favorites")
-        } else {
-          throw new Error("Favorite not found")
-        }
-      } else {
-        await addToFavorites(currentQuote, translatedText)
-        setIsFavorited(true)
-        toast.success("Added to favorites")
-      }
+      await addToFavorites(currentQuote, translatedText)
+      setIsFavorited(true)
+      toast.success("Added to favorites")
     } catch (error) {
-      console.error("Error toggling favorite:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to update favorites")
+      console.error("Error adding to favorites:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to add to favorites")
+    } finally {
+      setIsAddingToFavorites(false)
     }
-  }, [currentQuote, isFavorited, favorites, addToFavorites, removeFromFavorites, translatedText])
+  }, [currentQuote, isFavorited, addToFavorites, translatedText])
 
   if (isLoading) {
     return (
-      <Card className="bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+      <Card className="bg-background shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardContent className="p-6">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         </CardContent>
       </Card>
@@ -109,10 +105,10 @@ const QuoteCard: React.FC = () => {
 
   if (!currentQuote) {
     return (
-      <Card className="bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+      <Card className="bg-background shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardContent className="p-6">
           <div className="text-center">
-            <p className="text-lg text-gray-600">No quote available</p>
+            <p className="text-lg text-foreground">No quote available</p>
             <Button onClick={handleNextQuote} className="mt-4">
               Try Again
             </Button>
@@ -123,27 +119,27 @@ const QuoteCard: React.FC = () => {
   }
 
   return (
-    <Card className="bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+    <Card className="bg-background shadow-sm hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-6">
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h2 className="text-xl font-semibold">Quote of the Moment</h2>
-            <Button variant="ghost" size="icon" onClick={handleNextQuote} className="rounded-lg hover:bg-gray-100">
+            <h2 className="text-xl font-semibold text-foreground">Quote of the Moment</h2>
+            <Button variant="ghost" size="icon" onClick={handleNextQuote} className="rounded-lg hover:bg-muted">
               <RefreshCcw className="h-5 w-5" />
             </Button>
           </div>
 
-          <div className="pl-4 border-l-4 border-blue-500">
-            <blockquote className="text-lg text-gray-700 leading-relaxed">
+          <div className="pl-4 border-l-4 border-primary">
+            <blockquote className="text-lg text-foreground leading-relaxed">
               "{translatedText || currentQuote.content}"
             </blockquote>
-            <p className="mt-2 text-gray-600">- {currentQuote.author}</p>
+            <p className="mt-2 text-muted-foreground">- {currentQuote.author}</p>
           </div>
 
           {currentQuote.tags && (
             <div className="flex flex-wrap gap-2">
               {currentQuote.tags.map((tag) => (
-                <span key={tag.id} className="px-3 py-1 text-sm text-gray-600 rounded-full bg-gray-50">
+                <span key={tag.id} className="px-3 py-1 text-sm text-muted-foreground rounded-full bg-secondary">
                   {tag.name}
                 </span>
               ))}
@@ -163,8 +159,13 @@ const QuoteCard: React.FC = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={handleToggleFavorite} variant="default" className="flex-1 bg-gray-900 hover:bg-gray-800">
-              {isFavorited ? "Remove from Favorites" : "Add to Favorites"}
+            <Button
+              onClick={handleToggleFavorite}
+              variant={isFavorited ? "secondary" : "default"}
+              className="flex-1"
+              disabled={isFavorited || isAddingToFavorites}
+            >
+              {isFavorited ? "Added" : isAddingToFavorites ? "Adding..." : "Add to Favorites"}
             </Button>
           </div>
         </div>
