@@ -2,9 +2,9 @@ import "./globals.css"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import Header from "@/components/header"
+import { Footer } from "@/components/footer"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "sonner"
-import { Footer } from "@/components/footer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -22,10 +22,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <div className="flex flex-col min-h-screen">
+          <div className="flex flex-col min-h-screen h-screen overflow-hidden">
             <Header />
-            <Toaster/>
-            <main className="flex-grow">{children}</main>
+            <Toaster />
+            <main className="flex-grow overflow-y-auto">{children}</main>
             <Footer />
           </div>
         </ThemeProvider>

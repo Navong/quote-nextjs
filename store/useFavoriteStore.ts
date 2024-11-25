@@ -43,7 +43,11 @@ export const useFavoriteStore = create<FavoriteStore>((set, get) => ({
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       const favorites: FavoriteQuote[] = await response.json()
-      set({ favorites, isLoading: false })
+      // Sort favorites by createdAt date, most recent first
+      const sortedFavorites = favorites.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+      set({ favorites: sortedFavorites, isLoading: false })
     } catch (error) {
       console.error("Error fetching favorites:", error)
       set({ isLoading: false, favorites: [] })
@@ -52,16 +56,17 @@ export const useFavoriteStore = create<FavoriteStore>((set, get) => ({
 
   addToFavorites: async (quote: Quote, translatedText?: string) => {
     const { userId, favorites } = get()
+    const now = new Date().toISOString()
     // Optimistically update the state
     const optimisticFavorite: FavoriteQuote = {
       id: Date.now().toString(), // Temporary ID
       userId,
       quoteId: quote.id,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
       translatedContent: translatedText,
       quote,
     }
-    set({ favorites: [...favorites, optimisticFavorite] })
+    set({ favorites: [optimisticFavorite, ...favorites] })
 
     try {
       const response = await fetch(`/api/favorites/${userId}`, {
@@ -75,7 +80,9 @@ export const useFavoriteStore = create<FavoriteStore>((set, get) => ({
       const newFavorite: FavoriteQuote = await response.json()
       // Update with the actual data from the server
       set((state) => ({
-        favorites: state.favorites.map((fav) => (fav.id === optimisticFavorite.id ? newFavorite : fav)),
+        favorites: state.favorites.map((fav) =>
+          fav.id === optimisticFavorite.id ? { ...newFavorite, createdAt: now } : fav,
+        ),
       }))
     } catch (error) {
       // Revert the optimistic update on error
