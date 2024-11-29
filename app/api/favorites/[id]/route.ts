@@ -6,8 +6,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
 
+    console.log('Type of params:', typeof params);
+    console.log('Is params a Promise?:', params instanceof Promise);  // true : it was asynchrnous nee to be awaited
+
     try {
         const userId = (await params).id
+
+
 
         // Construct the API URL
         const response = await fetch(`${API_BASE_URL}/favorites/${userId}`);
@@ -20,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         // Parse and return the JSON data from the API
         const favorites = await response.json();
 
-        console.log(favorites)
+        // console.log(favorites)
 
         return NextResponse.json(favorites, { status: 200 });
     } catch (error) {
@@ -36,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     try {
 
         const userId = (await params).id
-        
+
         const { quoteId, translatedContent } = req.method === "POST" ? await req.json() : {};
 
         if (!quoteId) {
